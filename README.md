@@ -7,7 +7,7 @@ Official SDK for **Maxivo CMS**. It reads published blogs in every language, ref
 - SEO helpers for multilingual blogs
 - ESM + CommonJS, full TypeScript types, one runtime dependency (`zod`)
 
-Works with Next.js 14 and 15 (App Router) and any Node 18.17+ runtime.
+Works with Next.js 14 and 15 (App Router) and any Node 20+ runtime (Node 18 is end-of-life and has no global Web Crypto).
 
 ## Install
 
