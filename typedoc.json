@@ -1,0 +1,31 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "Maxivo SDK",
+  "entryPoints": ["src/index.ts", "src/next.ts", "src/seo.ts"],
+  "out": "docs-site",
+  "readme": "docs/index.md",
+  "projectDocuments": [
+    "docs/getting-started.md",
+    "docs/nextjs.md",
+    "docs/webhooks.md",
+    "docs/seo-and-i18n.md",
+    "docs/errors-and-retries.md",
+    "docs/security.md",
+    "docs/troubleshooting.md",
+    "docs/releasing.md"
+  ],
+  "navigation": {
+    "includeCategories": false,
+    "includeGroups": true
+  },
+  "navigationLinks": {
+    "npm": "https://www.npmjs.com/package/@maxivo/sdk",
+    "GitHub": "https://github.com/Maxcode-IT-Solutions/maxivo-sdk"
+  },
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "sort": ["kind", "alphabetical"],
+  "titleLink": "https://maxcode-it-solutions.github.io/maxivo-sdk/",
+  "gitRevision": "main",
+  "highlightLanguages": ["typescript", "tsx", "ts", "bash", "css", "json", "http"]
+}
