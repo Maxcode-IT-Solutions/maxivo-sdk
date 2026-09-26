@@ -1,0 +1,144 @@
+{
+  "name": "@maxivo/sdk",
+  "version": "0.1.0",
+  "description": "Official SDK for Maxivo CMS: typed delivery client, signed revalidate webhooks for Next.js, and SEO helpers.",
+  "keywords": [
+    "maxivo",
+    "cms",
+    "headless-cms",
+    "nextjs",
+    "sdk",
+    "i18n",
+    "blog"
+  ],
+  "license": "UNLICENSED",
+  "author": "Maxcode IT Solutions",
+  "homepage": "https://github.com/Maxcode-IT-Solutions/maxivo-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maxcode-IT-Solutions/maxivo-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Maxcode-IT-Solutions/maxivo-sdk/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.17"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./next": {
+      "import": {
+        "types": "./dist/next.d.ts",
+        "default": "./dist/next.js"
+      },
+      "require": {
+        "types": "./dist/next.d.cts",
+        "default": "./dist/next.cjs"
+      }
+    },
+    "./seo": {
+      "import": {
+        "types": "./dist/seo.d.ts",
+        "default": "./dist/seo.js"
+      },
+      "require": {
+        "types": "./dist/seo.d.cts",
+        "default": "./dist/seo.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "next": [
+        "./dist/next.d.ts"
+      ],
+      "seo": [
+        "./dist/seo.d.ts"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check:package": "publint && rm -rf .pack && pnpm pack --pack-destination .pack && attw .pack/*.tgz --profile node16",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "prepare": "husky",
+    "prepublishOnly": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "peerDependencies": {
+    "next": ">=14"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/cli": "^2.27.10",
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "next": "^15.1.0",
+    "prettier": "^3.4.2",
+    "publint": "^0.2.12",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
