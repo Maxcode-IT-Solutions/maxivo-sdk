@@ -4,7 +4,7 @@ import prettier from "eslint-config-prettier"
 import globals from "globals"
 
 export default tseslint.config(
-  { ignores: [".pack/**", "dist/**", "coverage/**", "examples/**", "node_modules/**"] },
+  { ignores: ["docs-site/**", ".pack/**", "dist/**", "coverage/**", "examples/**", "node_modules/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
