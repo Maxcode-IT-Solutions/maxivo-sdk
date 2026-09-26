@@ -1,5 +1,11 @@
 # @maxivo/sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- a796f0d: Publish with npm provenance (the source repo is now public) and link the new documentation site.
+
 ## 0.1.0
 
 ### Minor Changes

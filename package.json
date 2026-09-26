@@ -1,6 +1,6 @@
 {
   "name": "@maxivo/sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official SDK for Maxivo CMS: typed delivery client, signed revalidate webhooks for Next.js, and SEO helpers.",
   "keywords": [
     "maxivo",
