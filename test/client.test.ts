@@ -128,6 +128,39 @@ describe("createMaxivoClient", () => {
     expect(String(fetch.mock.calls[2]?.[0])).toContain("page=1&pageSize=25&category=domains")
   })
 
+  it("parses nested subcategories on help categories", async () => {
+    const fetch = vi.fn(async () =>
+      jsonResponse(200, {
+        items: [
+          {
+            slug: "account",
+            name: "Account",
+            count: 2,
+            subcategories: [
+              { slug: "billing", name: "Billing", count: 5 },
+              { slug: "security", name: "Security", count: 1 },
+            ],
+          },
+          { slug: "domains", name: "Domains", count: 3, subcategories: [] },
+        ],
+      }),
+    )
+    const result = await make(fetch).listHelpCategories({ lang: "en" })
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0]?.subcategories).toEqual([
+      { slug: "billing", name: "Billing", count: 5 },
+      { slug: "security", name: "Security", count: 1 },
+    ])
+    expect(result.items[1]?.subcategories).toEqual([])
+  })
+
+  it("rejects a help category response missing subcategories when validating", async () => {
+    const client = make(
+      vi.fn(async () => jsonResponse(200, { items: [{ slug: "domains", name: "Domains", count: 3 }] })),
+    )
+    await expect(client.listHelpCategories()).rejects.toMatchObject({ code: "invalid_response" })
+  })
+
   it("returns null for a 404 help article", async () => {
     expect(
       await make(vi.fn(async () => jsonResponse(404, { error: { code: "not_found", message: "no" } }))).getHelpArticle(
