@@ -48,7 +48,51 @@ export const PublicSitemapSchema = z.object({
 })
 export type PublicSitemap = z.infer<typeof PublicSitemapSchema>
 
-export const WebhookEventSchema = z.enum(["blog.published", "blog.unpublished", "ping"])
+export const PublicHelpCategorySchema = z.object({ slug: z.string(), name: z.string(), count: z.number() })
+export type PublicHelpCategory = z.infer<typeof PublicHelpCategorySchema>
+
+export const PublicHelpCategoryListSchema = z.object({
+  items: z.array(PublicHelpCategorySchema),
+})
+export type PublicHelpCategoryList = z.infer<typeof PublicHelpCategoryListSchema>
+
+export const PublicHelpArticleSummarySchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  description: z.string(),
+  coverUrl: z.string().url().nullable(),
+  coverAlt: z.string().nullable(),
+  category: z.object({ slug: z.string(), name: z.string() }).nullable(),
+  author: z.object({ name: z.string() }).nullable(),
+  publishedAt: z.string(),
+})
+export type PublicHelpArticleSummary = z.infer<typeof PublicHelpArticleSummarySchema>
+
+export const PublicHelpArticleListSchema = z.object({
+  items: z.array(PublicHelpArticleSummarySchema),
+  page: z.number(),
+  pageSize: z.number(),
+  total: z.number(),
+})
+export type PublicHelpArticleList = z.infer<typeof PublicHelpArticleListSchema>
+
+export const PublicHelpArticleSchema = PublicHelpArticleSummarySchema.extend({
+  lang: LanguageSchema,
+  seoTitle: z.string(),
+  seoDescription: z.string(),
+  /** Sanitised HTML. Render it inside an element with class `cms-content`. */
+  html: z.string(),
+  alternates: z.array(z.object({ lang: LanguageSchema, url: z.string().url() })),
+})
+export type PublicHelpArticle = z.infer<typeof PublicHelpArticleSchema>
+
+export const WebhookEventSchema = z.enum([
+  "blog.published",
+  "blog.unpublished",
+  "help_article.published",
+  "help_article.unpublished",
+  "ping",
+])
 export type WebhookEvent = z.infer<typeof WebhookEventSchema>
 
 export const RevalidatePayloadSchema = z.object({

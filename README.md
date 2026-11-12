@@ -65,12 +65,16 @@ A complete Next.js example is in [`examples/nextjs-app-router`](examples/nextjs-
 | `validate`   | on outside production | Validate responses against the schemas                          |
 | `fetch`      | global `fetch`        | Custom fetch                                                    |
 
-| Method                                              | Returns                                                     |
-| --------------------------------------------------- | ----------------------------------------------------------- |
-| `listBlogs({ lang?, page?, pageSize?, category? })` | `{ items, page, pageSize, total }`                          |
-| `getBlog(slug, { lang? })`                          | `PublicBlog`, or `null` when not published in that language |
-| `listCategories({ lang? })`                         | `{ items: [{ slug, name, count }] }`                        |
-| `sitemap()`                                         | `{ items: [{ slug, langs, updatedAt }] }`                   |
+| Method                                                     | Returns                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------ |
+| `listBlogs({ lang?, page?, pageSize?, category? })`        | `{ items, page, pageSize, total }`                                 |
+| `getBlog(slug, { lang? })`                                 | `PublicBlog`, or `null` when not published in that language        |
+| `listCategories({ lang? })`                                | `{ items: [{ slug, name, count }] }`                               |
+| `sitemap()`                                                | `{ items: [{ slug, langs, updatedAt }] }`                          |
+| `listHelpCategories({ lang? })`                            | `{ items: [{ slug, name, count }] }`                               |
+| `listHelpArticles({ lang?, page?, pageSize?, category? })` | `{ items, page, pageSize, total }`                                 |
+| `getHelpArticle(slug, { lang? })`                          | `PublicHelpArticle`, or `null` when not published in that language |
+| `submitHelpFeedback(slug, { lang, helpful })`              | `void`                                                             |
 
 ### Errors
 

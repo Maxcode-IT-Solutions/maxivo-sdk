@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import { createMaxivoClient, MaxivoError } from "../src"
-import { blog, jsonResponse } from "./fixtures"
+import { blog, helpArticle, jsonResponse } from "./fixtures"
 
 const make = (fetch: typeof globalThis.fetch, extra: Partial<Parameters<typeof createMaxivoClient>[0]> = {}) =>
   createMaxivoClient({
@@ -106,5 +106,53 @@ describe("createMaxivoClient", () => {
       { timeoutMs: 5 },
     )
     await expect(client.listBlogs()).rejects.toMatchObject({ status: 0, code: "timeout", retryable: true })
+  })
+
+  it("gets a help article and lists help categories and help articles", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(200, helpArticle))
+      .mockResolvedValueOnce(jsonResponse(200, { items: [{ slug: "domains", name: "Domains", count: 3 }] }))
+      .mockResolvedValueOnce(jsonResponse(200, { items: [], page: 1, pageSize: 25, total: 0 }))
+    const client = make(fetch)
+    const article = await client.getHelpArticle("setting-a-custom-dns-record", { lang: "en" })
+    expect(article?.slug).toBe("setting-a-custom-dns-record")
+    expect(String(fetch.mock.calls[0]?.[0])).toBe(
+      "https://cms.test/api/public/v1/projects/nexiify/help/articles/setting-a-custom-dns-record?lang=en",
+    )
+    expect((await client.listHelpCategories()).items[0]?.slug).toBe("domains")
+    const list = await client.listHelpArticles({ page: 1, pageSize: 25, category: "domains" })
+    expect(list.total).toBe(0)
+    expect(String(fetch.mock.calls[2]?.[0])).toContain("page=1&pageSize=25&category=domains")
+  })
+
+  it("returns null for a 404 help article", async () => {
+    expect(
+      await make(vi.fn(async () => jsonResponse(404, { error: { code: "not_found", message: "no" } }))).getHelpArticle(
+        "nope",
+      ),
+    ).toBeNull()
+  })
+
+  it("posts help article feedback with auth and content-type headers", async () => {
+    const fetch = vi.fn(async () => new Response(null, { status: 201 }))
+    await make(fetch).submitHelpFeedback("setting-a-custom-dns-record", { lang: "en", helpful: true })
+    const [url, init] = fetch.mock.calls[0] as unknown as [URL, RequestInit]
+    expect(String(url)).toBe(
+      "https://cms.test/api/public/v1/projects/nexiify/help/articles/setting-a-custom-dns-record/feedback",
+    )
+    expect(init.method).toBe("POST")
+    expect(JSON.parse(init.body as string)).toEqual({ lang: "en", helpful: true })
+    const headers = init.headers as Record<string, string>
+    expect(headers.Authorization).toBe("Bearer mxv_live_x")
+    expect(headers["Content-Type"]).toBe("application/json")
+  })
+
+  it("throws MaxivoError when help feedback submission fails", async () => {
+    const client = make(vi.fn(async () => jsonResponse(404, { error: { code: "not_found", message: "no article" } })))
+    await expect(client.submitHelpFeedback("nope", { lang: "en", helpful: false })).rejects.toMatchObject({
+      status: 404,
+      code: "not_found",
+    })
   })
 })
