@@ -1,8 +1,9 @@
 # @maxivo/sdk
 
-Official SDK for **Maxivo CMS**. It reads published blogs in every language, refreshes your Next.js pages the moment a post is published, and builds hreflang and sitemap entries.
+Official SDK for **Maxivo CMS**. It reads published blogs and help center articles in every language, refreshes your Next.js pages the moment something is published, and builds hreflang and sitemap entries.
 
 - Typed client with timeouts, retries and clear errors
+- Blogs and Help Center content (categories, optional subcategories, articles, feedback)
 - Signed revalidate webhooks (HMAC-SHA256), Node and Edge runtimes
 - SEO helpers for multilingual blogs
 - ESM + CommonJS, full TypeScript types, one runtime dependency (`zod`)
@@ -65,12 +66,16 @@ A complete Next.js example is in [`examples/nextjs-app-router`](examples/nextjs-
 | `validate`   | on outside production | Validate responses against the schemas                          |
 | `fetch`      | global `fetch`        | Custom fetch                                                    |
 
-| Method                                              | Returns                                                     |
-| --------------------------------------------------- | ----------------------------------------------------------- |
-| `listBlogs({ lang?, page?, pageSize?, category? })` | `{ items, page, pageSize, total }`                          |
-| `getBlog(slug, { lang? })`                          | `PublicBlog`, or `null` when not published in that language |
-| `listCategories({ lang? })`                         | `{ items: [{ slug, name, count }] }`                        |
-| `sitemap()`                                         | `{ items: [{ slug, langs, updatedAt }] }`                   |
+| Method                                                     | Returns                                                                                                  |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `listBlogs({ lang?, page?, pageSize?, category? })`        | `{ items, page, pageSize, total }`                                                                       |
+| `getBlog(slug, { lang? })`                                 | `PublicBlog`, or `null` when not published in that language                                              |
+| `listCategories({ lang? })`                                | `{ items: [{ slug, name, count }] }`                                                                     |
+| `sitemap()`                                                | `{ items: [{ slug, langs, updatedAt }] }`                                                                |
+| `listHelpCategories({ lang? })`                            | `{ items: [{ slug, name, count, subcategories: [{ slug, name, count }] }] }`                             |
+| `listHelpArticles({ lang?, page?, pageSize?, category? })` | `{ items, page, pageSize, total }`. `category` matches either a top-level category or a subcategory slug |
+| `getHelpArticle(slug, { lang? })`                          | `PublicHelpArticle`, or `null` when not published in that language                                       |
+| `submitHelpFeedback(slug, { lang, helpful })`              | `void` — records a helpful/not-helpful vote on a published article                                       |
 
 ### Errors
 
@@ -105,6 +110,36 @@ export const POST = createRevalidateHandler({
 Then set `https://your-site.com/api/maxivo/revalidate` as the revalidate URL in Maxivo → Settings → Integration, and click **Send test**.
 
 The handler checks the `x-maxivo-signature` header (HMAC-SHA256 of `timestamp.body`), rejects requests older than 5 minutes, and returns `401` for bad signatures and `400` for bad payloads. You can also call `verifySignature(body, header, secret)` yourself.
+
+`payload.event` is one of `blog.published`, `blog.unpublished`, `help_article.published`, `help_article.unpublished` or `ping`. The payload carries no category, so a help article event can't target its exact page directly — revalidate the Help Center's own pages by path (e.g. with Next.js's `type: "layout"` option) or rely on your pages' own ISR `revalidate` window alongside the `tags` revalidation this handler already does.
+
+## Help Center
+
+```ts
+// app/help-center/page.tsx
+const { items: categories } = await maxivo.listHelpCategories({ lang: "en" })
+// Each category optionally carries subcategories: { slug, name, count }[]
+```
+
+```ts
+// app/help-center/[category]/page.tsx
+const { items: articles } = await maxivo.listHelpArticles({ lang: "en", category: params.category })
+```
+
+```tsx
+// app/help-center/[category]/[slug]/page.tsx
+const article = await maxivo.getHelpArticle(params.slug, { lang: "en" })
+if (!article) notFound()
+return <div className="cms-content" dangerouslySetInnerHTML={{ __html: article.html }} />
+```
+
+```ts
+// Record a helpful/not-helpful vote (client-side; proxy through your own API route since
+// this call needs the server-only MAXIVO_TOKEN)
+await maxivo.submitHelpFeedback(slug, { lang: "en", helpful: true })
+```
+
+`category` on `listHelpArticles` and `listHelpCategories`' `items[].subcategories` both work with plain category slugs — a project that doesn't use subcategories just gets an empty `subcategories` array on every category.
 
 ## SEO
 

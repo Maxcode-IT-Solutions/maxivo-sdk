@@ -4,11 +4,17 @@ import {
   PublicBlogListSchema,
   PublicBlogSchema,
   PublicCategoryListSchema,
+  PublicHelpArticleListSchema,
+  PublicHelpArticleSchema,
+  PublicHelpCategoryListSchema,
   PublicSitemapSchema,
   type Language,
   type PublicBlog,
   type PublicBlogList,
   type PublicCategoryList,
+  type PublicHelpArticle,
+  type PublicHelpArticleList,
+  type PublicHelpCategoryList,
   type PublicSitemap,
 } from "./types"
 import { SDK_VERSION } from "./version"
@@ -33,6 +39,13 @@ export interface MaxivoClientOptions {
 }
 
 export interface ListBlogsParams {
+  lang?: Language
+  page?: number
+  pageSize?: number
+  category?: string
+}
+
+export interface ListHelpArticlesParams {
   lang?: Language
   page?: number
   pageSize?: number
@@ -121,6 +134,47 @@ export function createMaxivoClient(options: MaxivoClientOptions) {
     }
   }
 
+  async function postOnce(url: URL, body: unknown): Promise<void> {
+    const init: RequestInit = {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${options.token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Maxivo-SDK": `js/${SDK_VERSION}`,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(timeoutMs),
+    }
+
+    let res: Response
+    try {
+      res = await doFetch(url, init)
+    } catch (err) {
+      const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")
+      throw new MaxivoError(
+        0,
+        timedOut ? "timeout" : "network_error",
+        timedOut ? `Request timed out after ${timeoutMs} ms` : "Network error",
+        { cause: err },
+      )
+    }
+
+    const requestId = res.headers.get("x-request-id") ?? undefined
+    if (!res.ok) {
+      let code = "http_error"
+      let message = `Maxivo request failed with status ${res.status}`
+      try {
+        const body = (await res.json()) as { error?: { code?: string; message?: string } }
+        code = body.error?.code ?? code
+        message = body.error?.message ?? message
+      } catch {
+        // not JSON; keep defaults
+      }
+      throw new MaxivoError(res.status, code, message, { requestId })
+    }
+  }
+
   return {
     /** Published blogs, newest first. */
     listBlogs(params: ListBlogsParams = {}): Promise<PublicBlogList> {
@@ -149,6 +203,39 @@ export function createMaxivoClient(options: MaxivoClientOptions) {
     /** Every published slug and its languages, for sitemaps. */
     sitemap(): Promise<PublicSitemap> {
       return request("/sitemap", {}, PublicSitemapSchema)
+    },
+
+    /** Help categories with their published article counts. */
+    listHelpCategories(params: { lang?: Language } = {}): Promise<PublicHelpCategoryList> {
+      return request("/help/categories", { lang: params.lang }, PublicHelpCategoryListSchema)
+    },
+
+    /** Published help articles, newest first. */
+    listHelpArticles(params: ListHelpArticlesParams = {}): Promise<PublicHelpArticleList> {
+      return request(
+        "/help/articles",
+        { lang: params.lang, page: params.page, pageSize: params.pageSize, category: params.category },
+        PublicHelpArticleListSchema,
+      )
+    },
+
+    /** One published help article, or `null` when it is not published in that language. */
+    async getHelpArticle(slug: string, params: { lang?: Language } = {}): Promise<PublicHelpArticle | null> {
+      try {
+        return await request(
+          `/help/articles/${encodeURIComponent(slug)}`,
+          { lang: params.lang },
+          PublicHelpArticleSchema,
+        )
+      } catch (err) {
+        if (err instanceof MaxivoError && err.status === 404) return null
+        throw err
+      }
+    },
+
+    /** Records a helpful/not-helpful vote on a published help article. */
+    submitHelpFeedback(slug: string, input: { lang: string; helpful: boolean }): Promise<void> {
+      return postOnce(new URL(`${base}/help/articles/${encodeURIComponent(slug)}/feedback`), input)
     },
   }
 }
