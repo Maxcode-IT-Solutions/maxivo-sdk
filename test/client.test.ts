@@ -112,7 +112,9 @@ describe("createMaxivoClient", () => {
     const fetch = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse(200, helpArticle))
-      .mockResolvedValueOnce(jsonResponse(200, { items: [{ slug: "domains", name: "Domains", count: 3 }] }))
+      .mockResolvedValueOnce(
+        jsonResponse(200, { items: [{ slug: "domains", name: "Domains", count: 3, subcategories: [] }] }),
+      )
       .mockResolvedValueOnce(jsonResponse(200, { items: [], page: 1, pageSize: 25, total: 0 }))
     const client = make(fetch)
     const article = await client.getHelpArticle("setting-a-custom-dns-record", { lang: "en" })

@@ -48,7 +48,13 @@ export const PublicSitemapSchema = z.object({
 })
 export type PublicSitemap = z.infer<typeof PublicSitemapSchema>
 
-export const PublicHelpCategorySchema = z.object({ slug: z.string(), name: z.string(), count: z.number() })
+export const PublicHelpSubcategorySchema = z.object({ slug: z.string(), name: z.string(), count: z.number() })
+export type PublicHelpSubcategory = z.infer<typeof PublicHelpSubcategorySchema>
+
+/** A top-level help category. `subcategories` is empty for projects that don't use them. */
+export const PublicHelpCategorySchema = PublicHelpSubcategorySchema.extend({
+  subcategories: z.array(PublicHelpSubcategorySchema),
+})
 export type PublicHelpCategory = z.infer<typeof PublicHelpCategorySchema>
 
 export const PublicHelpCategoryListSchema = z.object({
